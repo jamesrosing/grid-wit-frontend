@@ -32,7 +32,9 @@ export interface GridPosition {
   col: number
 }
 
-export interface ActiveCell extends GridPosition {
+export interface ActiveCell {
+  row: number
+  col: number
   direction: 'across' | 'down'
 }
 

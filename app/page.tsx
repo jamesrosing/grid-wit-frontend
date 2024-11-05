@@ -5,6 +5,7 @@ import { getDailyPuzzle } from '@/lib/api'
 import { CrosswordGrid } from '@/components/CrosswordGrid'
 import { ClueList } from '@/components/ClueList'
 import type { Puzzle, Clue, ActiveCell } from '@/types'
+import { useUser } from '@clerk/nextjs'
 
 export default function CrosswordPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
@@ -13,6 +14,7 @@ export default function CrosswordPage() {
   const [userProgress, setUserProgress] = useState<string[][]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = useUser()
 
   useEffect(() => {
     async function loadPuzzle() {
@@ -25,9 +27,11 @@ export default function CrosswordPage() {
         setUserProgress(Array(15).fill(null).map(() => Array(15).fill('')))
         
         // Load saved progress if exists
-        const savedProgress = localStorage.getItem('puzzleProgress')
-        if (savedProgress) {
-          setUserProgress(JSON.parse(savedProgress))
+        if (user?.id) {
+          const savedProgress = localStorage.getItem(`puzzle-progress-${user.id}-${data.id}`)
+          if (savedProgress) {
+            setUserProgress(JSON.parse(savedProgress))
+          }
         }
       } catch (err) {
         console.error('Error loading puzzle:', err)
@@ -37,14 +41,17 @@ export default function CrosswordPage() {
       }
     }
     loadPuzzle()
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     // Save progress whenever it changes
-    if (userProgress.length > 0 && puzzle?.id) {
-      localStorage.setItem(`puzzle-progress-${puzzle.id}`, JSON.stringify(userProgress))
+    if (userProgress.length > 0 && puzzle?.id && user?.id) {
+      localStorage.setItem(
+        `puzzle-progress-${user.id}-${puzzle.id}`, 
+        JSON.stringify(userProgress)
+      )
     }
-  }, [userProgress, puzzle?.id])
+  }, [userProgress, puzzle?.id, user?.id])
 
   const handleCellSelect = (row: number, col: number, direction: 'across' | 'down') => {
     if (!puzzle) return
@@ -94,27 +101,30 @@ export default function CrosswordPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-8">
+    <div className="max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,350px] gap-4 md:gap-8">
         {/* Crossword Grid */}
         <div className="order-2 lg:order-1">
           {activeClue && (
-            <div className="mb-4 p-4 bg-blue-50 rounded">
-              <span className="font-bold mr-2">{activeClue.number}.</span>
+            <div className="mb-4 p-3 md:p-4 bg-zinc-100 rounded-lg text-sm md:text-base">
+              <span className="font-bold mr-2">{activeClue.number} {activeClue.direction}:</span>
               {activeClue.text}
             </div>
           )}
-          <CrosswordGrid
-            puzzle={puzzle}
-            activeCell={activeCell}
-            onCellSelect={handleCellSelect}
-            userProgress={userProgress}
-            onUpdateProgress={handleUpdateProgress}
-          />
+          <div className="flex justify-center lg:justify-start">
+            <CrosswordGrid
+              puzzle={puzzle}
+              activeCell={activeCell}
+              activeClue={activeClue}
+              onCellSelect={handleCellSelect}
+              userProgress={userProgress}
+              onUpdateProgress={handleUpdateProgress}
+            />
+          </div>
         </div>
 
         {/* Clue Lists */}
-        <div className="order-1 lg:order-2 bg-white p-4 rounded shadow-lg">
+        <div className="order-1 lg:order-2 bg-white p-3 md:p-4 rounded-lg shadow-md max-h-[50vh] lg:max-h-[80vh] overflow-y-auto">
           <ClueList
             clues={puzzle.clues}
             activeClue={activeClue}
@@ -122,7 +132,7 @@ export default function CrosswordPage() {
               setActiveClue(clue)
               setActiveCell({
                 row: clue.row,
-                column: clue.column,
+                col: clue.column,
                 direction: clue.direction
               })
             }}
