@@ -106,7 +106,7 @@ export default function CrosswordPage() {
         {/* Crossword Grid */}
         <div className="order-2 lg:order-1">
           {activeClue && (
-            <div className="mb-4 p-3 md:p-4 bg-zinc-100 rounded-lg text-sm md:text-base">
+            <div className="mb-4 p-3 md:p-4 bg-zinc-100 dark:bg-zinc-800 text-sm md:text-base text-zinc-900 dark:text-zinc-50">
               <span className="font-bold mr-2">{activeClue.number} {activeClue.direction}:</span>
               {activeClue.text}
             </div>
@@ -124,7 +124,7 @@ export default function CrosswordPage() {
         </div>
 
         {/* Clue Lists */}
-        <div className="order-1 lg:order-2 bg-white p-3 md:p-4 rounded-lg shadow-md max-h-[50vh] lg:max-h-[80vh] overflow-y-auto">
+        <div className="order-1 lg:order-2 max-h-[50vh] lg:max-h-[80vh] overflow-y-auto">
           <ClueList
             clues={puzzle.clues}
             activeClue={activeClue}

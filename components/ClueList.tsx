@@ -22,16 +22,16 @@ export function ClueList({ clues, activeClue, onClueSelect }: Props) {
     .sort((a, b) => a.number - b.number)
 
   return (
-    <div className="bg-zinc-900 text-zinc-50 p-4 rounded-lg">
+    <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 p-4">
       {/* Direction Tabs - Mobile Only */}
-      <div className="flex gap-8 mb-4 border-b border-zinc-800 lg:hidden">
+      <div className="flex gap-8 mb-4 border-b border-zinc-200 dark:border-zinc-800 lg:hidden">
         <button
           onClick={() => setSelectedDirection('across')}
           className={cn(
             "pb-2 text-sm font-medium",
             selectedDirection === 'across' 
-              ? "text-zinc-50 border-b-2 border-zinc-50" 
-              : "text-zinc-400 hover:text-zinc-200"
+              ? "text-zinc-900 dark:text-zinc-50 border-b-2 border-zinc-900 dark:border-zinc-50" 
+              : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
           )}
         >
           Across
@@ -41,8 +41,8 @@ export function ClueList({ clues, activeClue, onClueSelect }: Props) {
           className={cn(
             "pb-2 text-sm font-medium",
             selectedDirection === 'down' 
-              ? "text-zinc-50 border-b-2 border-zinc-50" 
-              : "text-zinc-400 hover:text-zinc-200"
+              ? "text-zinc-900 dark:text-zinc-50 border-b-2 border-zinc-900 dark:border-zinc-50" 
+              : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
           )}
         >
           Down
@@ -58,10 +58,10 @@ export function ClueList({ clues, activeClue, onClueSelect }: Props) {
               <button
                 key={`across-${clue.number}`}
                 className={cn(
-                  "w-full text-left px-2 py-1 rounded text-sm",
+                  "w-full text-left px-2 py-1 text-sm",
                   activeClue?.number === clue.number && activeClue.direction === 'across'
-                    ? 'bg-zinc-800' 
-                    : 'hover:bg-zinc-800/50'
+                    ? 'bg-zinc-100 dark:bg-zinc-800' 
+                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
                 )}
                 onClick={() => onClueSelect(clue)}
               >
@@ -80,10 +80,10 @@ export function ClueList({ clues, activeClue, onClueSelect }: Props) {
               <button
                 key={`down-${clue.number}`}
                 className={cn(
-                  "w-full text-left px-2 py-1 rounded text-sm",
+                  "w-full text-left px-2 py-1 text-sm",
                   activeClue?.number === clue.number && activeClue.direction === 'down'
-                    ? 'bg-zinc-800' 
-                    : 'hover:bg-zinc-800/50'
+                    ? 'bg-zinc-100 dark:bg-zinc-800' 
+                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
                 )}
                 onClick={() => onClueSelect(clue)}
               >
