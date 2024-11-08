@@ -33,6 +33,7 @@ export default function CrosswordPage() {
             setUserProgress(JSON.parse(savedProgress))
           }
         }
+        
       } catch (err) {
         console.error('Error loading puzzle:', err)
         setError('Failed to load puzzle')
