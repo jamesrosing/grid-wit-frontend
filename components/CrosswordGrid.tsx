@@ -112,6 +112,25 @@ export function CrosswordGrid({
     }
   }
 
+  const moveToNextWord = () => {
+    if (!activeClue || !activeCell) return
+
+    // Find the next clue in the same direction
+    const currentNumber = activeClue.number
+    const direction = activeClue.direction
+    
+    const nextClue = puzzle.clues.find(clue => 
+      clue.direction === direction && 
+      clue.number > currentNumber
+    ) || puzzle.clues.find(clue => 
+      clue.direction === direction
+    )
+
+    if (nextClue) {
+      onCellSelect(nextClue.row, nextClue.column, direction)
+    }
+  }
+
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, row: number, col: number) => {
     if (e.key === 'Backspace') {
       e.preventDefault()
