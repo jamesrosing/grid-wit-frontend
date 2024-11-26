@@ -9,10 +9,15 @@ export interface Clue {
 
 export interface Puzzle {
   id: number
+  date: string
   date_published: string
   author: string
+  editor: string
   grid: string  // JSON string of 15x15 array
   clues: Clue[]
+  publisher?: string
+  difficulty?: string
+  notes?: string
 }
 
 export interface Cell {
@@ -38,4 +43,4 @@ export interface ActiveCell {
   direction: 'across' | 'down'
 }
 
-export const GRID_SIZE = 15  // Standard crossword size 
+export const GRID_SIZE = 15  // Standard crossword size

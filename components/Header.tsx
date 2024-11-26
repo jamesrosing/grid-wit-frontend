@@ -1,16 +1,24 @@
 'use client'
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import { Menu, X, Sun, Moon, Calendar, Laptop, Search, BookmarkIcon, Clock, Star, LayoutDashboard } from 'lucide-react'
+import { Menu, X, Sun, Moon, Calendar, Laptop, Search, BookmarkIcon, Clock, Star, LayoutDashboard, LogOut, LogIn } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { searchPuzzles } from '@/lib/api'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const { theme, setTheme } = useTheme()
+  const { user } = useAuth()
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-zinc-950 dark:border-zinc-800">
@@ -23,7 +31,7 @@ export default function Header() {
 
         {/* Header Actions */}
         <div className="flex items-center gap-2">
-          <SignedIn>
+          {user && (
             <button
               className="p-2"
               onClick={() => setIsSearchOpen(true)}
@@ -31,7 +39,7 @@ export default function Header() {
             >
               <Search className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
             </button>
-          </SignedIn>
+          )}
           <button
             className="p-2"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -44,7 +52,7 @@ export default function Header() {
 
       {/* Search Modal */}
       {isSearchOpen && (
-        <>
+        <div>
           <div 
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
             onClick={() => setIsSearchOpen(false)}
@@ -89,7 +97,7 @@ export default function Header() {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Menu Overlay */}
@@ -116,81 +124,82 @@ export default function Header() {
 
             {/* Menu Content */}
             <div className="p-4 flex flex-col gap-6">
-              <SignedIn>
-                <div className="flex items-center gap-3 px-2">
-                  <UserButton 
-                    afterSignOutUrl="/"
-                    appearance={{
-                      elements: {
-                        avatarBox: "w-10 h-10",
-                      }
-                    }}
-                  />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">My Account</span>
+              {user ? (
+                <div className="relative ml-3">
+                  <div>
+                    <button
+                      onClick={() => setIsOpen(!isOpen)}
+                      className="flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    >
+                      <span className="sr-only">Open user menu</span>
+                      <img
+                        className="h-8 w-8 rounded-full"
+                        src={user.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${user.email}`}
+                        alt=""
+                      />
+                    </button>
+                  </div>
+                  {isOpen && (
+                    <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Profile Settings
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Daily Puzzle
+                      </Link>
+                      <Link
+                        href="/bookmarks"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Bookmarks
+                      </Link>
+                      <Link
+                        href="/in-progress"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        In Progress
+                      </Link>
+                      <Link
+                        href="/favorites"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Favorites
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleSignOut()
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
                 </div>
-
-                <nav className="space-y-1">
-                  <Link 
-                    href="/dashboard"
-                    className="flex items-center gap-3 px-2 py-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-
-                  <Link 
-                    href="/"
-                    className="flex items-center gap-3 px-2 py-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Calendar className="h-4 w-4" />
-                    <span>Daily Puzzle</span>
-                  </Link>
-
-                  <Link 
-                    href="/saved"
-                    className="flex items-center gap-3 px-2 py-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <BookmarkIcon className="h-4 w-4" />
-                    <span>Saved Puzzles</span>
-                  </Link>
-
-                  <Link 
-                    href="/in-progress"
-                    className="flex items-center gap-3 px-2 py-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Clock className="h-4 w-4" />
-                    <span>In Progress</span>
-                  </Link>
-
-                  <Link 
-                    href="/favorites"
-                    className="flex items-center gap-3 px-2 py-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Star className="h-4 w-4" />
-                    <span>Favorites</span>
-                  </Link>
-                </nav>
-              </SignedIn>
-
-              <SignedOut>
+              ) : (
                 <div className="flex flex-col items-center gap-4 mt-4">
-                  <SignInButton mode="modal">
-                    <button className="w-full rounded-md bg-zinc-900 dark:bg-zinc-50 px-8 py-2 text-sm font-medium text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors">
-                      Sign In
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="w-full rounded-md border border-zinc-200 dark:border-zinc-700 px-8 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
+                  <Link
+                    href="/auth/login"
+                    className="w-full rounded-md bg-zinc-900 dark:bg-zinc-50 px-8 py-2 text-sm font-medium text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors text-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
                 </div>
-              </SignedOut>
+              )}
 
               {/* Theme Icons */}
               <div className="flex items-center gap-2 px-2">

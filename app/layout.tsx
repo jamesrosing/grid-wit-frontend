@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { ClerkProvider } from '@clerk/nextjs'
 import Header from '@/components/Header'
 import { ThemeProvider } from '@/components/providers/theme-provider'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,22 +18,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className="h-full" suppressHydrationWarning>
-        <body className={`${inter.className} min-h-full bg-zinc-50 dark:bg-zinc-950`}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-full bg-zinc-50 dark:bg-zinc-950`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
             <Header />
             <main className="container mx-auto px-4 py-4 md:py-8 min-h-screen">
               {children}
             </main>
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   )
 }
