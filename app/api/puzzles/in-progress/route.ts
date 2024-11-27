@@ -1,22 +1,32 @@
-import { auth } from '@clerk/nextjs/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { pool } from '@/lib/db'
 
 export async function GET() {
-  const { userId } = await auth()
-  if (!userId) {
-    return new NextResponse('Unauthorized', { status: 401 })
-  }
-
   try {
-    const result = await pool.query(
-      `SELECT * FROM user_puzzle_states 
-       WHERE user_id = $1 AND completed = false 
-       ORDER BY last_played_at DESC`,
-      [userId]
-    )
-    return NextResponse.json(result.rows)
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data, error } = await supabase
+      .from('puzzle_progress')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .eq('completed', false)
+      .order('last_played_at', { ascending: false })
+
+    if (error) throw error
+
+    return NextResponse.json({ data })
   } catch (error) {
-    return new NextResponse('Internal Server Error', { status: 500 })
+    console.error('Get in-progress puzzles error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
-} 
+}

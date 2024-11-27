@@ -4,12 +4,17 @@ import './globals.css'
 import Header from '@/components/Header'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Grid Wit',
-  description: 'Unlock your mind one word at a time',
+  description: 'Daily crossword puzzles for the modern age',
+  viewport: 'width=device-width, initial-scale=1',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
@@ -18,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-full bg-zinc-50 dark:bg-zinc-950`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -27,10 +32,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Header />
-            <main className="container mx-auto px-4 py-4 md:py-8 min-h-screen">
-              {children}
-            </main>
+            <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950">
+              <Header />
+              <main className="container mx-auto px-4 py-4 md:py-8 min-h-[calc(100vh-3.5rem)]">
+                {children}
+              </main>
+              <Toaster richColors closeButton position="top-right" />
+            </div>
           </AuthProvider>
         </ThemeProvider>
       </body>

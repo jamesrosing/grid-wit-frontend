@@ -118,4 +118,79 @@ export async function getLastPlayedPuzzle(userId: string) {
   } finally {
     client.release()
   }
-} 
+}
+
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+
+export interface PuzzleState {
+  id: string
+  user_id: string
+  puzzle_id: string
+  state: any
+  completed: boolean
+  last_played_at: string
+  created_at: string
+}
+
+export async function getPuzzleState(puzzleId: string): Promise<PuzzleState | null> {
+  const supabase = createClientComponentClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    throw new Error('Not authenticated')
+  }
+
+  const { data, error } = await supabase
+    .from('puzzle_progress')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .eq('puzzle_id', puzzleId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching puzzle state:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function getDashboardData() {
+  const supabase = createClientComponentClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    throw new Error('Not authenticated')
+  }
+
+  const { data: inProgress, error: inProgressError } = await supabase
+    .from('puzzle_progress')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .eq('completed', false)
+    .order('last_played_at', { ascending: false })
+    .limit(5)
+
+  if (inProgressError) {
+    console.error('Error fetching in-progress puzzles:', inProgressError)
+    throw inProgressError
+  }
+
+  const { data: completed, error: completedError } = await supabase
+    .from('puzzle_progress')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .eq('completed', true)
+    .order('last_played_at', { ascending: false })
+    .limit(5)
+
+  if (completedError) {
+    console.error('Error fetching completed puzzles:', completedError)
+    throw completedError
+  }
+
+  return {
+    inProgress: inProgress || [],
+    completed: completed || []
+  }
+}

@@ -162,7 +162,7 @@ export function CrosswordGrid({
   }
 
   useEffect(() => {
-    const rawGrid: string[] = JSON.parse(puzzle.grid)
+    const rawGrid = typeof puzzle.grid === 'string' ? JSON.parse(puzzle.grid) : puzzle.grid
     const cells: Cell[][] = []
     let cellNumber = 1
 

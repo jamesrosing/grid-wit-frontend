@@ -1,27 +1,38 @@
-import { auth } from '@clerk/nextjs/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { pool } from '@/lib/db'
 
 export async function POST(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
-  const { userId } = await auth()
-  if (!userId) {
-    return new NextResponse('Unauthorized', { status: 401 })
-  }
-
   try {
-    const result = await pool.query(
-      `INSERT INTO user_puzzle_states (user_id, puzzle_id, is_favorite)
-       VALUES ($1, $2, true)
-       ON CONFLICT (user_id, puzzle_id) 
-       DO UPDATE SET is_favorite = NOT user_puzzle_states.is_favorite
-       RETURNING *`,
-      [userId, params.id]
-    )
-    return NextResponse.json(result.rows[0])
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { favorite } = await request.json()
+    const puzzleId = params.id
+
+    const { data, error } = await supabase
+      .from('puzzle_favorites')
+      .upsert({
+        user_id: session.user.id,
+        puzzle_id: puzzleId,
+        is_favorite: favorite
+      })
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, data })
   } catch (error) {
-    return new NextResponse('Internal Server Error', { status: 500 })
+    console.error('Favorite puzzle error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
-} 
+}

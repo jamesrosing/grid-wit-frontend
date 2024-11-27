@@ -11,16 +11,24 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.push('/')
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          await router.replace('/')
+        }
+      } catch (error) {
+        console.error('Auth check error:', error)
       }
     }
     checkUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        router.push('/')
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          await router.replace('/')
+        } catch (error) {
+          console.error('Navigation error:', error)
+        }
       }
     })
 
