@@ -9,11 +9,12 @@ import Link from 'next/link'
 import { getDashboardData } from '@/lib/api'
 import { PuzzleList } from '@/components/dashboard/PuzzleList'
 import { useEffect, useState } from 'react'
+import type { DashboardData } from '@/types'
 
 export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
-  const [dashboardData, setDashboardData] = useState(null)
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
