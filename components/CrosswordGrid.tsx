@@ -162,33 +162,56 @@ export function CrosswordGrid({
   }
 
   useEffect(() => {
-    const rawGrid = typeof puzzle.grid === 'string' ? JSON.parse(puzzle.grid) : puzzle.grid
-    const cells: Cell[][] = []
-    let cellNumber = 1
+    let rawGrid: string[];
+    
+    try {
+      // Handle different grid formats
+      if (typeof puzzle.grid === 'string') {
+        const parsed = JSON.parse(puzzle.grid);
+        // If it's a 2D array, flatten it
+        rawGrid = Array.isArray(parsed[0]) 
+          ? parsed.flat() 
+          : parsed;
+      } else if (Array.isArray(puzzle.grid)) {
+        // If it's already an array, ensure it's flattened
+        rawGrid = Array.isArray(puzzle.grid[0])
+          ? puzzle.grid.flat()
+          : puzzle.grid;
+      } else {
+        console.error('Invalid grid format:', puzzle.grid);
+        return;
+      }
 
-    for (let row = 0; row < GRID_SIZE; row++) {
-      cells[row] = []
-      for (let col = 0; col < GRID_SIZE; col++) {
-        const index = row * GRID_SIZE + col
-        const value = rawGrid[index]
-        const isStartOfWord = isStartOfAcross(rawGrid, row, col) || 
-                            isStartOfDown(rawGrid, row, col)
+      const cells: Cell[][] = [];
+      let cellNumber = 1;
 
-        cells[row][col] = {
-          value,
-          isBlack: value === '.',
-          row,
-          col,
-          number: isStartOfWord ? cellNumber++ : undefined,
-          isStart: {
-            across: isStartOfAcross(rawGrid, row, col),
-            down: isStartOfDown(rawGrid, row, col)
-          }
+      for (let row = 0; row < GRID_SIZE; row++) {
+        cells[row] = [];
+        for (let col = 0; col < GRID_SIZE; col++) {
+          const index = row * GRID_SIZE + col;
+          const value = rawGrid[index];
+          const isStartOfWord = isStartOfAcross(rawGrid, row, col) || 
+                              isStartOfDown(rawGrid, row, col);
+
+          cells[row][col] = {
+            value,
+            isBlack: value === '.',
+            row,
+            col,
+            number: isStartOfWord ? cellNumber++ : undefined,
+            isStart: {
+              across: isStartOfAcross(rawGrid, row, col),
+              down: isStartOfDown(rawGrid, row, col)
+            }
+          };
         }
       }
+
+      setGrid(cells);
+    } catch (error) {
+      console.error('Error parsing grid:', error);
     }
-    setGrid(cells)
-  }, [puzzle])
+  }, [puzzle.grid]);
 
   function isPartOfActiveClue(row: number, col: number): boolean {
     if (!activeClue || !activeCell) return false

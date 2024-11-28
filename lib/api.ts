@@ -112,7 +112,7 @@ export async function getUserPuzzles(userId: number): Promise<{ puzzles: SavedPu
   return response.json()
 }
 
-// Save puzzle progress (new save)
+// Save puzzle progress
 export async function savePuzzleProgress(
   userId: number,
   puzzleId: number,
