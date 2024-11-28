@@ -214,33 +214,32 @@ export function CrosswordGrid({
   }, [puzzle.grid]);
 
   function isPartOfActiveClue(row: number, col: number): boolean {
-    if (!activeClue || !activeCell) return false
+    if (!activeClue) return false
 
+    // For across clues
     if (activeClue.direction === 'across') {
-      return row === activeClue.row && 
-             col >= activeClue.column && 
-             col < activeClue.column + activeClue.answer.length &&
-             !hasNumberBetween(activeClue.column, col, row, 'across')
-    } else {
-      return col === activeClue.column && 
-             row >= activeClue.row && 
-             row < activeClue.row + activeClue.answer.length &&
-             !hasNumberBetween(activeClue.row, row, col, 'down')
+      // Check if we're in the same row
+      if (row !== activeClue.row) return false
+      
+      // Get the start and end columns of the word
+      const startCol = activeClue.column
+      const endCol = startCol + activeClue.answer.length - 1
+      
+      // Check if the current cell is within the word's range
+      return col >= startCol && col <= endCol
+    } 
+    // For down clues
+    else {
+      // Check if we're in the same column
+      if (col !== activeClue.column) return false
+      
+      // Get the start and end rows of the word
+      const startRow = activeClue.row
+      const endRow = startRow + activeClue.answer.length - 1
+      
+      // Check if the current cell is within the word's range
+      return row >= startRow && row <= endRow
     }
-  }
-
-  function hasNumberBetween(start: number, end: number, fixed: number, direction: 'across' | 'down'): boolean {
-    const min = Math.min(start, end)
-    const max = Math.max(start, end)
-
-    for (let i = min + 1; i < max; i++) {
-      const cell = direction === 'across' 
-        ? grid[fixed][i]
-        : grid[i][fixed]
-
-      if (cell?.number) return true
-    }
-    return false
   }
 
   return (
