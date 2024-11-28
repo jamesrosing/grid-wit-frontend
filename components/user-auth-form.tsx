@@ -3,9 +3,7 @@
 import * as React from "react"
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
@@ -70,7 +68,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   }
 
   return (
-    <div className={cn("grid gap-6", className)} {...props}>
+    <div className={className} {...props}>
       <form onSubmit={onSubmit} className="grid gap-4">
         <div className="grid gap-1">
           <Label htmlFor="email">Email</Label>
@@ -102,12 +100,12 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
             required
           />
         </div>
-        <Button type="submit" disabled={isLoading}>
+        <button type="submit" disabled={isLoading}>
           {isLoading ? (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           ) : null}
           Sign In
-        </Button>
+        </button>
       </form>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -119,14 +117,14 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           </span>
         </div>
       </div>
-      <Button variant="outline" type="button" disabled={isLoading} onClick={onSignInWithGoogle}>
+      <button variant="outline" type="button" disabled={isLoading} onClick={onSignInWithGoogle}>
         {isLoading ? (
           <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <Icons.gitHub className="mr-2 h-4 w-4" />
         )}{" "}
         Google
-      </Button>
+      </button>
     </div>
   )
 }

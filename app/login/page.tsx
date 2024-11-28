@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import { UserAuthForm } from '@/components/user-auth-form'
 import { Icons } from '@/components/icons'
 
