@@ -11,42 +11,51 @@ export interface Database {
     Tables: {
       puzzle_progress: {
         Row: {
-          id: string
-          user_id: string
+          id: number
           puzzle_id: string
+          user_id: string
           state: Json
           completed: boolean
-          last_played_at: string
           created_at: string
+          last_played_at: string
         }
         Insert: {
-          id?: string
-          user_id: string
+          id?: number
           puzzle_id: string
+          user_id: string
           state: Json
           completed?: boolean
-          last_played_at?: string
           created_at?: string
+          last_played_at?: string
         }
         Update: {
-          id?: string
-          user_id?: string
+          id?: number
           puzzle_id?: string
+          user_id?: string
           state?: Json
           completed?: boolean
-          last_played_at?: string
           created_at?: string
+          last_played_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "puzzle_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      [key: string]: never
     }
     Functions: {
-      [_ in never]: never
+      [key: string]: never
     }
     Enums: {
-      [_ in never]: never
+      [key: string]: never
     }
   }
 }

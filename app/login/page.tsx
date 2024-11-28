@@ -49,7 +49,7 @@ export default function AuthenticationPage() {
             )}
             <p className='text-center text-xs text-muted-foreground'>
               By clicking continue, you agree to our{' '}
-              <a
+          <a
                 href='/terms'
                 className='underline underline-offset-4 hover:text-primary'
               >

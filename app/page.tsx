@@ -165,7 +165,7 @@ export default function CrosswordPage() {
             activeCell={activeCell}
             activeClue={activeClue}
             onCellSelect={(row, col, direction) => {
-              setActiveCell({ row, col })
+              setActiveCell({ row, col, direction })
               const clue = puzzle.clues.find(
                 c => c.direction === direction &&
                      c.row === row &&
@@ -193,7 +193,11 @@ export default function CrosswordPage() {
             activeClue={activeClue}
             onClueSelect={(clue) => {
               setActiveClue(clue)
-              setActiveCell({ row: clue.row, col: clue.column })
+            setActiveCell({ 
+              row: clue.row, 
+              col: clue.column, 
+              direction: clue.direction || 'across'  // Provide a default if not available
+            })
             }}
           />
         </div>

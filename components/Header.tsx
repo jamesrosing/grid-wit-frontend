@@ -110,15 +110,15 @@ export default function Header() {
           />
           <div className="fixed right-4 top-20 w-[200px] bg-white dark:bg-zinc-950 z-50 animate-in slide-in-from-top">
             <div className="flex flex-col p-2">
-              {user ? (
-                <>
+          {user ? (
+            <>
                   <Link 
                     href="/dashboard"
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
-                  </Link>
+                  Dashboard
+              </Link>
                   <Link 
                     href="/bookmarks"
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -139,7 +139,7 @@ export default function Header() {
                   >
                     <Star className="h-4 w-4" />
                     Favorites
-                  </Link>
+              </Link>
                   <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
                   <button
                     onClick={handleSignOut}
@@ -148,16 +148,16 @@ export default function Header() {
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </button>
-                </>
-              ) : (
+            </>
+          ) : (
                 <Link 
                   href="/login"
                   className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   <LogIn className="h-4 w-4" />
-                  Sign In
-                </Link>
-              )}
+                Sign In
+            </Link>
+          )}
               <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
               <button
                 onClick={() => setTheme('light')}

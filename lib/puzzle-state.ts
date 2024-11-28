@@ -1,9 +1,89 @@
 import { pool } from './db'
+import type { Database } from './database.types'
+import type { Json } from './database.types'
 
 export interface PuzzleProgress {
   grid: string[][]
   completed: boolean
 }
+
+export interface PuzzleState {
+  grid: string[][]
+  completed: boolean
+  lastPlayedAt: string
+}
+
+export function validatePuzzleState(state: unknown): state is PuzzleState {
+  if (!state || typeof state !== 'object') return false
+
+  const stateObj = state as Record<string, unknown>
+
+  if (!Array.isArray(stateObj.grid)) return false
+  if (typeof stateObj.completed !== 'boolean') return false
+  if (typeof stateObj.lastPlayedAt !== 'string') return false
+
+  // Check grid structure
+  if (!stateObj.grid.every(row => 
+    Array.isArray(row) && row.every(cell => 
+      typeof cell === 'string'
+    )
+  )) return false
+
+  return true
+}
+
+export function parsePuzzleState(state: Json): PuzzleState | null {
+  try {
+    const parsed = typeof state === 'string' ? JSON.parse(state) : state
+    if (validatePuzzleState(parsed)) {
+      return parsed
+    }
+    return null
+  } catch (e) {
+    console.error('Failed to parse puzzle state:', e)
+    return null
+  }
+}
+
+export function stringifyPuzzleState(state: PuzzleState): string {
+  return JSON.stringify(state)
+}
+
+export function createEmptyPuzzleState(): PuzzleState {
+  return {
+    grid: Array(15).fill(null).map(() => Array(15).fill('')),
+    completed: false,
+    lastPlayedAt: new Date().toISOString()
+  }
+}
+
+export function isPuzzleComplete(state: PuzzleState, solution: string[][]): boolean {
+  return state.grid.every((row, i) =>
+    row.every((cell, j) =>
+      cell === solution[i][j] || solution[i][j] === '.'
+    )
+  )
+}
+
+export function updatePuzzleState(
+  state: PuzzleState,
+  row: number,
+  col: number,
+  value: string,
+  solution: string[][]
+): PuzzleState {
+  const newGrid = state.grid.map(r => [...r])
+  newGrid[row][col] = value
+
+  return {
+    grid: newGrid,
+    completed: isPuzzleComplete({ ...state, grid: newGrid }, solution),
+    lastPlayedAt: new Date().toISOString()
+  }
+}
+
+export type PuzzleProgressInsert = Database['public']['Tables']['puzzle_progress']['Insert']
+export type PuzzleProgressRow = Database['public']['Tables']['puzzle_progress']['Row']
 
 export async function savePuzzleState(
   userId: string,
@@ -23,7 +103,7 @@ export async function savePuzzleState(
         last_played_at = CURRENT_TIMESTAMP
       RETURNING *
       `,
-      [userId, puzzleId, JSON.stringify(progress.grid), progress.completed]
+      [userId, puzzleId, stringifyPuzzleState(progress), progress.completed]
     )
     return result.rows[0]
   } finally {
@@ -122,16 +202,6 @@ export async function getLastPlayedPuzzle(userId: string) {
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-export interface PuzzleState {
-  id: string
-  user_id: string
-  puzzle_id: string
-  state: any
-  completed: boolean
-  last_played_at: string
-  created_at: string
-}
-
 export async function getPuzzleState(puzzleId: string): Promise<PuzzleState | null> {
   const supabase = createClientComponentClient()
   const { data: { session } } = await supabase.auth.getSession()
@@ -152,7 +222,7 @@ export async function getPuzzleState(puzzleId: string): Promise<PuzzleState | nu
     return null
   }
 
-  return data
+  return parsePuzzleState(data.state)
 }
 
 export async function getDashboardData() {
@@ -190,7 +260,7 @@ export async function getDashboardData() {
   }
 
   return {
-    inProgress: inProgress || [],
-    completed: completed || []
+    inProgress: inProgress.map(p => parsePuzzleState(p.state)) || [],
+    completed: completed.map(p => parsePuzzleState(p.state)) || []
   }
 }

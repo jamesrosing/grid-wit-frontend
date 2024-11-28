@@ -4,7 +4,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarDays, Star, Clock, BookmarkIcon, Trophy, LayoutDashboard } from 'lucide-react'
+import { CalendarDays, Star, Clock, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { getDashboardData } from '@/lib/api'
 import { PuzzleList } from '@/components/dashboard/PuzzleList'
