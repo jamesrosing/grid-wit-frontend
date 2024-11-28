@@ -16,13 +16,12 @@ export function useProfile(userId?: string) {
 
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
-      if (error) throw error
       setProfile(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error fetching profile')

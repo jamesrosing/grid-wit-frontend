@@ -26,9 +26,10 @@ export function useBookmarks() {
         const response = await fetch('/api/bookmarks')
         if (!response.ok) throw new Error('Failed to fetch bookmarks')
         const data = await response.json()
-        setBookmarks(data)
+        setBookmarks(data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error fetching bookmarks')
+        setBookmarks([])
       } finally {
         setLoading(false)
       }

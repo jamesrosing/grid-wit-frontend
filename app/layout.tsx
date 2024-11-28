@@ -4,7 +4,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { Toaster } from "sonner"
+import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
@@ -41,7 +41,7 @@ export default function RootLayout({
               <main className="container mx-auto px-4 py-4 md:py-8 min-h-[calc(100vh-3.5rem)]">
                 {children}
               </main>
-              <Toaster richColors closeButton position="top-right" />
+              <Toaster position="top-center" />
             </div>
           </AuthProvider>
         </ThemeProvider>

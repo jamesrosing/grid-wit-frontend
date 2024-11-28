@@ -166,16 +166,9 @@ export async function getApiStatus(): Promise<{
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const response = await fetch(`${API_BASE_URL}/api/dashboard`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-cache' // Disable caching for now
-  })
-  
+  const response = await fetch('/api/dashboard')
   if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard data: ${response.statusText}`)
+    throw new Error('Failed to fetch dashboard data')
   }
-  
   return response.json()
 }

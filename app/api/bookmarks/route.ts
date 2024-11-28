@@ -7,12 +7,30 @@ export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
 
-    const { data: bookmarks, error } = await supabase
-      .from('puzzle_bookmarks')
-      .select('*')
-      .order('created_at', { ascending: false })
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
 
-    if (error) throw error
+    const { data: bookmarks } = await supabase
+      .from('puzzle_bookmarks')
+      .select(`
+        *,
+        puzzle:puzzles (
+          id,
+          title,
+          author,
+          date,
+          grid,
+          clues
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
 
     return NextResponse.json(bookmarks)
   } catch (error) {
@@ -29,9 +47,21 @@ export async function POST(request: Request) {
     const supabase = createRouteHandlerClient({ cookies })
     const { puzzle_id } = await request.json()
 
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { data, error } = await supabase
       .from('puzzle_bookmarks')
-      .insert({ puzzle_id })
+      .insert({ 
+        puzzle_id,
+        user_id: user.id 
+      })
       .select()
       .single()
 
@@ -52,10 +82,22 @@ export async function DELETE(request: Request) {
     const supabase = createRouteHandlerClient({ cookies })
     const { puzzle_id } = await request.json()
 
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { error } = await supabase
       .from('puzzle_bookmarks')
       .delete()
-      .match({ puzzle_id })
+      .match({ 
+        puzzle_id,
+        user_id: user.id 
+      })
 
     if (error) throw error
 

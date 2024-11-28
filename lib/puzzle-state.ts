@@ -114,34 +114,59 @@ export async function getDashboardData() {
     throw new Error('Not authenticated')
   }
 
-  const { data: inProgress, error: inProgressError } = await supabase
+  // Get in-progress puzzles
+  const { data: inProgress } = await supabase
     .from('puzzle_progress')
-    .select('*')
+    .select(`
+      *,
+      puzzle:puzzles (
+        id,
+        title,
+        author,
+        date
+      )
+    `)
     .eq('user_id', session.user.id)
     .eq('completed', false)
     .order('last_played_at', { ascending: false })
     .limit(5)
 
-  if (inProgressError) {
-    console.error('Error fetching in-progress puzzles:', inProgressError)
-    throw inProgressError
-  }
-
-  const { data: completed, error: completedError } = await supabase
+  // Get completed puzzles
+  const { data: completed } = await supabase
     .from('puzzle_progress')
-    .select('*')
+    .select()
     .eq('user_id', session.user.id)
     .eq('completed', true)
-    .order('last_played_at', { ascending: false })
-    .limit(5)
 
-  if (completedError) {
-    console.error('Error fetching completed puzzles:', completedError)
-    throw completedError
-  }
+  // Get favorites count
+  const { count: favoritesCount } = await supabase
+    .from('puzzle_bookmarks')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', session.user.id)
+
+  // Get recent activity
+  const { data: recentActivity } = await supabase
+    .from('puzzle_progress')
+    .select(`
+      *,
+      puzzle:puzzles (
+        id,
+        title,
+        author,
+        date
+      )
+    `)
+    .eq('user_id', session.user.id)
+    .order('last_played_at', { ascending: false })
+    .limit(10)
 
   return {
-    inProgress: inProgress.map(p => parsePuzzleState(p.state)) || [],
-    completed: completed.map(p => parsePuzzleState(p.state)) || []
+    stats: {
+      totalSolved: completed?.length || 0,
+      inProgress: inProgress?.length || 0,
+      favorites: favoritesCount || 0
+    },
+    recentActivity: recentActivity || [],
+    inProgressPuzzles: inProgress || []
   }
 }

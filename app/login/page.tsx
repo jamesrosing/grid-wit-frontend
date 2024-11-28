@@ -1,15 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { UserAuthForm } from '@/components/user-auth-form'
 import { Icons } from '@/components/icons'
 
 export default function AuthenticationPage() {
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const supabase = createClientComponentClient()
 
   return (
     <div className='flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center'>

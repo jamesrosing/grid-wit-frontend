@@ -12,7 +12,6 @@ import Image from 'next/image'
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
   const { theme, setTheme } = useTheme()
   const { user } = useAuth()
   const supabase = createClientComponentClient()
@@ -113,12 +112,26 @@ export default function Header() {
           {user ? (
             <>
                   <Link 
+                    href="/"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Daily Puzzle
+                  </Link>
+                  <Link 
+                    href="/in-progress"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <Clock className="h-4 w-4" />
+                    In Progress
+                  </Link>
+                  <Link 
                     href="/dashboard"
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-              </Link>
+                    Dashboard
+                  </Link>
                   <Link 
                     href="/bookmarks"
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -127,19 +140,12 @@ export default function Header() {
                     Bookmarks
                   </Link>
                   <Link 
-                    href="/history"
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  >
-                    <Clock className="h-4 w-4" />
-                    History
-                  </Link>
-                  <Link 
                     href="/favorites"
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Star className="h-4 w-4" />
                     Favorites
-              </Link>
+                  </Link>
                   <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
                   <button
                     onClick={handleSignOut}

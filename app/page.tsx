@@ -86,38 +86,9 @@ export default function CrosswordPage() {
     loadPuzzle()
   }, [user?.id, supabase])
 
-  // Save progress to Supabase
-  useEffect(() => {
-    if (!user?.id || !puzzle?.id) return
-
-    const saveProgress = async () => {
-      try {
-        const { error } = await supabase
-          .from('puzzle_progress')
-          .upsert({
-            user_id: user.id,
-            puzzle_id: puzzle.id.toString(),
-            state: JSON.stringify(userProgress),
-            completed: false,
-            last_played_at: new Date().toISOString()
-          })
-
-        if (error) {
-          console.error('Error saving progress:', error)
-        }
-      } catch (e) {
-        console.error('Error in saveProgress:', e)
-      }
-    }
-
-    // Debounce save to avoid too many requests
-    const timeoutId = setTimeout(saveProgress, 1000)
-    return () => clearTimeout(timeoutId)
-  }, [userProgress, user?.id, puzzle, supabase])
-
-  const handleSaveProgress = async () => {
+  const saveProgress = async (showToast = false) => {
     if (!user?.id || !puzzle?.id) {
-      toast.error('Please sign in to save your progress')
+      if (showToast) toast.error('Please sign in to save your progress')
       return
     }
 
@@ -134,15 +105,28 @@ export default function CrosswordPage() {
 
       if (error) {
         console.error('Error saving progress:', error)
-        toast.error('Failed to save progress')
-      } else {
-        toast.success('Progress saved successfully')
+        if (showToast) toast.error('Failed to save progress')
+        return false
       }
+      
+      if (showToast) toast.success('Progress saved successfully')
+      return true
     } catch (e) {
       console.error('Error in saveProgress:', e)
-      toast.error('Failed to save progress')
+      if (showToast) toast.error('Failed to save progress')
+      return false
     }
   }
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!user?.id || !puzzle?.id) return
+
+    const timeoutId = setTimeout(() => saveProgress(false), 1000)
+    return () => clearTimeout(timeoutId)
+  }, [userProgress])
+
+  const handleSaveProgress = () => saveProgress(true)
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading puzzle...</div>
@@ -166,11 +150,22 @@ export default function CrosswordPage() {
             activeClue={activeClue}
             onCellSelect={(row, col, direction) => {
               setActiveCell({ row, col, direction })
-              const clue = puzzle.clues.find(
-                c => c.direction === direction &&
-                     c.row === row &&
-                     c.column === col
-              )
+              
+              // Find a clue that contains this cell
+              const clue = puzzle.clues.find(c => {
+                if (c.direction !== direction) return false
+                
+                if (direction === 'across') {
+                  return c.row === row && 
+                         col >= c.column && 
+                         col < c.column + c.answer.length
+                } else {
+                  return c.column === col && 
+                         row >= c.row && 
+                         row < c.row + c.answer.length
+                }
+              })
+              
               setActiveClue(clue || null)
             }}
             userProgress={userProgress}
@@ -193,11 +188,11 @@ export default function CrosswordPage() {
             activeClue={activeClue}
             onClueSelect={(clue) => {
               setActiveClue(clue)
-            setActiveCell({ 
-              row: clue.row, 
-              col: clue.column, 
-              direction: clue.direction || 'across'  // Provide a default if not available
-            })
+              setActiveCell({ 
+                row: clue.row, 
+                col: clue.column, 
+                direction: clue.direction || 'across'  // Provide a default if not available
+              })
             }}
           />
         </div>

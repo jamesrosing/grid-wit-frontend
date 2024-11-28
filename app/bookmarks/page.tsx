@@ -39,7 +39,7 @@ export default function BookmarksPage() {
     )
   }
 
-  if (bookmarks.length === 0) {
+  if (!bookmarks || bookmarks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <BookmarkIcon className="w-12 h-12 text-zinc-400" />
@@ -52,30 +52,36 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-6">
-        Bookmarked Puzzles
-      </h1>
-      <div className="grid gap-4">
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Bookmarked Puzzles</h1>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {bookmarks.map((bookmark) => (
-          <div
+          <Link
             key={bookmark.id}
-            className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-lg shadow-sm"
+            href={`/`}
+            className="block p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900"
           >
-            <Link
-              href={`/puzzles/${bookmark.puzzle_id}`}
-              className="flex-1 hover:underline text-zinc-900 dark:text-zinc-50"
-            >
-              Puzzle #{bookmark.puzzle_id}
-            </Link>
-            <button
-              onClick={() => removeBookmark(bookmark.puzzle_id)}
-              className="p-2 text-zinc-500 hover:text-red-500 transition-colors"
-              aria-label="Remove bookmark"
-            >
-              <BookmarkIcon className="w-5 h-5" />
-            </button>
-          </div>
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="font-medium">{bookmark.puzzle.title}</div>
+                <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                  by {bookmark.puzzle.author}
+                </div>
+                <div className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  {new Date(bookmark.puzzle.date).toLocaleDateString()}
+                </div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  removeBookmark(bookmark.puzzle_id)
+                }}
+                className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
+              >
+                <BookmarkIcon className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+              </button>
+            </div>
+          </Link>
         ))}
       </div>
     </div>
