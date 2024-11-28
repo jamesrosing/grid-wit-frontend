@@ -25,7 +25,7 @@ export default function AuthenticationPage() {
           <div className="relative z-20 mt-auto">
             <blockquote className="space-y-2">
               <p className="text-lg">
-                "Crosswords are like a mental gym where every clue is a new exercise for your brain."
+                &quot;Crosswords are like a mental gym where every clue is a new exercise for your brain.&quot;
               </p>
               <footer className="text-sm">Will Shortz</footer>
             </blockquote>
