@@ -1,7 +1,6 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { pool } from '@/lib/db'
 
 export async function GET() {
   try {
