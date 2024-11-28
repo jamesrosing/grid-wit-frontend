@@ -47,6 +47,26 @@ export interface Database {
           }
         ]
       }
+      puzzle_favorites: {
+        Row: {
+          user_id: string
+          puzzle_id: string
+          is_favorite: boolean
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          puzzle_id: string
+          is_favorite: boolean
+          created_at: string
+        }
+        Update: {
+          user_id?: string
+          puzzle_id?: string
+          is_favorite?: boolean
+          created_at?: string
+        }
+      }
     }
     Views: {
       [key: string]: never

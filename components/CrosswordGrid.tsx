@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, KeyboardEvent } from 'react'
+import { useState, useEffect, KeyboardEvent, ChangeEvent } from 'react'
 import { Puzzle, Cell, ActiveCell, GRID_SIZE, Clue } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -8,9 +8,20 @@ interface Props {
   puzzle: Puzzle
   onCellSelect: (row: number, col: number, direction: 'across' | 'down') => void
   activeCell: ActiveCell | null
-  activeClue: Clue | null
+  activeClue: {
+    direction: 'across' | 'down'
+    number: number
+    row: number
+    column: number
+    answer: string
+  } | null
   userProgress: string[][]
   onUpdateProgress: (row: number, col: number, value: string) => void
+}
+
+interface Movement {
+  rowDelta: number
+  colDelta: number
 }
 
 export function CrosswordGrid({ 
@@ -78,24 +89,16 @@ export function CrosswordGrid({
         onCellSelect(row, col, 'down')
       }
     } else {
-      const newDirection = activeClue?.direction || direction
-      setDirection(newDirection)
-      onCellSelect(row, col, newDirection)
+      const defaultDirection: 'across' | 'down' = direction
+      const currentDirection = (activeClue?.direction as 'across' | 'down' | undefined) || defaultDirection
+      setDirection(currentDirection)
+      onCellSelect(row, col, currentDirection)
     }
   }
 
-  const handleCellInput = (row: number, col: number, value: string) => {
-    if (grid[row][col].isBlack) return
-
-    const newValue = value.toUpperCase().replace(/[^A-Z]/g, '')
-    if (newValue) {
-      onUpdateProgress(row, col, newValue)
-
-      if (activeClue) {
-        const movement = activeClue.direction === 'across' ? { rowDelta: 0, colDelta: 1 } : { rowDelta: 1, colDelta: 0 }
-        moveToNextCell(row, col, movement.rowDelta, movement.colDelta)
-      }
-    }
+  const handleCellInput = (e: ChangeEvent<HTMLInputElement>) => {
+    // Disable onChange handler since we're handling all input through onKeyDown
+    return
   }
 
   const moveToNextCell = (row: number, col: number, rowDelta: number, colDelta: number) => {
@@ -107,7 +110,7 @@ export function CrosswordGrid({
       newCol >= 0 && newCol < GRID_SIZE &&
       !grid[newRow][newCol].isBlack
     ) {
-      const moveDirection = activeClue ? activeClue.direction : direction
+      const moveDirection = (activeClue?.direction as 'across' | 'down' | undefined) || direction
       onCellSelect(newRow, newCol, moveDirection)
     }
   }
@@ -115,83 +118,154 @@ export function CrosswordGrid({
   const moveToNextWord = () => {
     if (!activeClue || !activeCell) return
 
-    // Find the next clue in the same direction
     const currentNumber = activeClue.number
-    const direction = activeClue.direction
+    const currentDirection = activeClue.direction
     
     const nextClue = puzzle.clues.find(clue => 
-      clue.direction === direction && 
+      clue.direction === currentDirection && 
       clue.number > currentNumber
     ) || puzzle.clues.find(clue => 
-      clue.direction === direction
+      clue.direction === currentDirection
     )
 
     if (nextClue) {
-      onCellSelect(nextClue.row, nextClue.column, direction)
+      onCellSelect(nextClue.row, nextClue.column, currentDirection)
+    }
+  }
+
+  const moveToPreviousWord = () => {
+    if (!activeClue || !activeCell) return
+
+    const currentNumber = activeClue.number
+    const currentDirection = activeClue.direction
+    
+    const prevClue = [...puzzle.clues]
+      .reverse()
+      .find(clue => 
+        clue.direction === currentDirection && 
+        clue.number < currentNumber
+      ) || [...puzzle.clues]
+      .reverse()
+      .find(clue => 
+        clue.direction === currentDirection
+      )
+
+    if (prevClue) {
+      onCellSelect(prevClue.row, prevClue.column, currentDirection)
     }
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, row: number, col: number) => {
-    if (e.key === 'Backspace') {
-      e.preventDefault()
-      if (userProgress[row][col]) {
+    // Always prevent default behavior to ensure consistent handling
+    e.preventDefault()
+
+    // Handle special keys
+    switch (e.key) {
+      case 'Backspace':
+        if (userProgress[row][col]) {
+          onUpdateProgress(row, col, '')
+        } else {
+          const movement: Movement = (activeClue?.direction as 'across' | 'down') === 'across' 
+            ? { rowDelta: 0, colDelta: -1 } 
+            : { rowDelta: -1, colDelta: 0 }
+          moveToNextCell(row, col, movement.rowDelta, movement.colDelta)
+        }
+        break
+
+      case 'Delete':
         onUpdateProgress(row, col, '')
-      } else {
-        const movement = activeClue?.direction === 'across' ? { rowDelta: 0, colDelta: -1 } : { rowDelta: -1, colDelta: 0 }
-        moveToNextCell(row, col, movement.rowDelta, movement.colDelta)
-      }
-    } else if (e.key === 'Delete') {
-      e.preventDefault()
-      onUpdateProgress(row, col, '')
-    } else if (e.key === 'ArrowRight') {
-      moveToNextCell(row, col, 0, 1)
-      setDirection('across')
-    } else if (e.key === 'ArrowLeft') {
-      moveToNextCell(row, col, 0, -1)
-      setDirection('across')
-    } else if (e.key === 'ArrowDown') {
-      moveToNextCell(row, col, 1, 0)
-      setDirection('down')
-    } else if (e.key === 'ArrowUp') {
-      moveToNextCell(row, col, -1, 0)
-      setDirection('down')
-    } else if (e.key === 'Tab') {
-      e.preventDefault()
-      moveToNextWord()
+        break
+
+      case 'ArrowRight':
+        moveToNextCell(row, col, 0, 1)
+        setDirection('across')
+        break
+
+      case 'ArrowLeft':
+        moveToNextCell(row, col, 0, -1)
+        setDirection('across')
+        break
+
+      case 'ArrowDown':
+        moveToNextCell(row, col, 1, 0)
+        setDirection('down')
+        break
+
+      case 'ArrowUp':
+        moveToNextCell(row, col, -1, 0)
+        setDirection('down')
+        break
+
+      case 'Tab':
+        if (e.shiftKey) {
+          moveToPreviousWord()
+        } else {
+          moveToNextWord()
+        }
+        break
+
+      case 'Enter':
+      case ' ':
+        // Toggle direction on Enter or Space
+        if (activeClue) {
+          const newDirection: 'across' | 'down' = activeClue.direction === 'across' ? 'down' : 'across'
+          setDirection(newDirection)
+          onCellSelect(row, col, newDirection)
+        }
+        break
+
+      default:
+        // Handle letter input (including lowercase)
+        if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
+          const newValue = e.key.toUpperCase()
+          onUpdateProgress(row, col, newValue)
+
+          if (activeClue) {
+            const movement: Movement = (activeClue?.direction as 'across' | 'down') === 'across' 
+              ? { rowDelta: 0, colDelta: 1 } 
+              : { rowDelta: 1, colDelta: 0 }
+            moveToNextCell(row, col, movement.rowDelta, movement.colDelta)
+          }
+        }
     }
   }
 
   useEffect(() => {
-    let rawGrid: string[];
+    if (!Array.isArray(userProgress) || userProgress.length !== GRID_SIZE) {
+      console.error('Invalid userProgress format')
+      return
+    }
+
+    let rawGrid: string[] = []
     
     try {
       // Handle different grid formats
       if (typeof puzzle.grid === 'string') {
-        const parsed = JSON.parse(puzzle.grid);
+        const parsed = JSON.parse(puzzle.grid)
         // If it's a 2D array, flatten it
         rawGrid = Array.isArray(parsed[0]) 
           ? parsed.flat() 
-          : parsed;
+          : parsed
       } else if (Array.isArray(puzzle.grid)) {
         // If it's already an array, ensure it's flattened
         rawGrid = Array.isArray(puzzle.grid[0])
-          ? puzzle.grid.flat()
-          : puzzle.grid;
+          ? (puzzle.grid as string[][]).flat()
+          : puzzle.grid as string[]
       } else {
-        console.error('Invalid grid format:', puzzle.grid);
-        return;
+        console.error('Invalid grid format:', puzzle.grid)
+        return
       }
 
-      const cells: Cell[][] = [];
-      let cellNumber = 1;
+      const cells: Cell[][] = []
+      let cellNumber = 1
 
       for (let row = 0; row < GRID_SIZE; row++) {
-        cells[row] = [];
+        cells[row] = []
         for (let col = 0; col < GRID_SIZE; col++) {
-          const index = row * GRID_SIZE + col;
-          const value = rawGrid[index];
+          const index = row * GRID_SIZE + col
+          const value = rawGrid[index]
           const isStartOfWord = isStartOfAcross(rawGrid, row, col) || 
-                              isStartOfDown(rawGrid, row, col);
+                              isStartOfDown(rawGrid, row, col)
 
           cells[row][col] = {
             value,
@@ -203,15 +277,24 @@ export function CrosswordGrid({
               across: isStartOfAcross(rawGrid, row, col),
               down: isStartOfDown(rawGrid, row, col)
             }
-          };
+          }
         }
       }
 
-      setGrid(cells);
+      setGrid(cells)
     } catch (error) {
-      console.error('Error parsing grid:', error);
+      console.error('Error parsing grid:', error)
     }
-  }, [puzzle.grid]);
+  }, [puzzle.grid])
+
+  // Validate userProgress format
+  useEffect(() => {
+    if (!Array.isArray(userProgress) || userProgress.length !== GRID_SIZE ||
+        !userProgress.every(row => Array.isArray(row) && row.length === GRID_SIZE)) {
+      console.error('Invalid userProgress format')
+      return
+    }
+  }, [userProgress])
 
   function isPartOfActiveClue(row: number, col: number): boolean {
     if (!activeClue) return false
@@ -260,7 +343,7 @@ export function CrosswordGrid({
                 activeCell?.row === i && activeCell?.col === j && "bg-zinc-200",
                 isPartOfActiveClue(i, j) && "bg-zinc-100",
                 !cell.isBlack && "hover:bg-zinc-50",
-                "aspect-square text-center cursor-pointer"
+                "aspect-square text-center cursor-pointer select-none"
               )}
               onClick={() => handleCellClick(i, j, cell)}
             >
@@ -272,13 +355,15 @@ export function CrosswordGrid({
               {!cell.isBlack && (
                 <input
                   type="text"
+                  inputMode="none"
                   maxLength={1}
                   value={userProgress[i][j] || ''}
-                  onChange={(e) => handleCellInput(i, j, e.target.value)}
+                  onChange={handleCellInput}
                   onKeyDown={(e) => handleKeyDown(e, i, j)}
-                  className="w-full h-full text-center text-base md:text-lg font-medium text-black bg-transparent focus:outline-none"
+                  className="w-full h-full text-center text-base md:text-lg font-medium text-black bg-transparent focus:outline-none select-none"
                   style={{ caretColor: 'transparent' }}
                   ref={activeCell?.row === i && activeCell?.col === j ? (el) => el?.focus() : null}
+                  aria-label={`Row ${i + 1}, Column ${j + 1}`}
                 />
               )}
             </div>

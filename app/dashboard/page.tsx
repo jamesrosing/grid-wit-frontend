@@ -4,10 +4,8 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarDays, Star, Clock, Trophy } from 'lucide-react'
+import { CalendarDays, Star, Clock, Trophy, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { getDashboardData } from '@/lib/api'
-import { PuzzleList } from '@/components/dashboard/PuzzleList'
 import { useEffect, useState } from 'react'
 import type { DashboardData } from '@/types'
 
@@ -16,76 +14,89 @@ export default function DashboardPage() {
   const supabase = createClientComponentClient()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.replace('/auth/login')
-        return
-      }
-
+    async function loadDashboard() {
       try {
-        const data = await getDashboardData()
-        setDashboardData(data)
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error)
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          router.replace('/login')
+          return
+        }
+
+        const { data: recentActivity } = await supabase
+          .from('puzzle_progress')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('last_played_at', { ascending: false })
+          .limit(5)
+
+        const { data: inProgress } = await supabase
+          .from('puzzle_progress')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('completed', false)
+          .order('last_played_at', { ascending: false })
+
+        const { data: favorites } = await supabase
+          .from('puzzle_favorites')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_favorite', true)
+
+        setDashboardData({
+          recentActivity: recentActivity || [],
+          inProgressPuzzles: inProgress || [],
+          favoritePuzzles: favorites || []
+        })
+      } catch (err) {
+        setError('Failed to load dashboard data')
+        console.error('Dashboard error:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    checkUser()
-  }, [router, supabase])
+    loadDashboard()
+  }, [supabase, router])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-zinc-900"></div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     )
   }
 
-  if (!dashboardData) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500">Failed to load dashboard data</div>
+      <div className="text-center py-8">
+        <p className="text-red-500">{error}</p>
       </div>
     )
   }
+
+  if (!dashboardData) return null
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Dashboard</h2>
-      </div>
-      
+    <div className="space-y-4">
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="puzzles">My Puzzles</TabsTrigger>
           <TabsTrigger value="stats">Statistics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {/* Quick Stats */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Solved</CardTitle>
-                <Trophy className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.stats.totalSolved}</div>
-              </CardContent>
-            </Card>
+          {/* Stats Overview */}
+          <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">In Progress</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.stats.inProgress}</div>
+                <div className="text-2xl font-bold">{dashboardData.inProgressPuzzles.length}</div>
               </CardContent>
             </Card>
             <Card>
@@ -94,7 +105,7 @@ export default function DashboardPage() {
                 <Star className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.stats.favorites}</div>
+                <div className="text-2xl font-bold">{dashboardData.favoritePuzzles.length}</div>
               </CardContent>
             </Card>
           </div>
@@ -141,25 +152,7 @@ export default function DashboardPage() {
           </Card>
         </TabsContent>
 
-        {/* We'll implement these tabs next */}
-        <TabsContent value="puzzles" className="space-y-4">
-          {/* In Progress Puzzles */}
-          <PuzzleList
-            title="In Progress"
-            description="Puzzles you're currently working on"
-            puzzles={dashboardData.inProgressPuzzles}
-          />
-
-          {/* Favorite Puzzles */}
-          <PuzzleList
-            title="Favorites"
-            description="Your favorite puzzles"
-            puzzles={dashboardData.favoritePuzzles}
-          />
-        </TabsContent>
-
         <TabsContent value="stats" className="space-y-4">
-          {/* Implement statistics view */}
           <Card>
             <CardHeader>
               <CardTitle>Statistics</CardTitle>
