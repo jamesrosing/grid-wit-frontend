@@ -9,9 +9,10 @@ export interface Clue {
 
 export interface Puzzle {
   id: number
+  title: string
+  author: string
   date: string
   date_published: string
-  author: string
   editor: string
   grid: string  // JSON string of 15x15 array
   clues: Clue[]

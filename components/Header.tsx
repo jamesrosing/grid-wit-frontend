@@ -1,26 +1,47 @@
 'use client'
 
 import { Menu, X, Sun, Moon, Calendar, Laptop, Search, BookmarkIcon, Clock, Star, LayoutDashboard, LogOut, LogIn } from 'lucide-react'
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/contexts/AuthContext'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const { setTheme } = useTheme()
   const { user, signOut } = useAuth()
-  const supabase = createClientComponentClient()
+  const router = useRouter()
+
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const author = formData.get('author')
+    const date = formData.get('date')
+    const year = formData.get('year')
+
+    const params = new URLSearchParams()
+    if (author) params.append('author', author.toString())
+    if (date) params.append('date', date.toString())
+    if (year) params.append('year', year.toString())
+
+    setIsOpen(false)
+    router.push(`/puzzles/search?${params.toString()}`)
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-zinc-950 dark:border-zinc-800">
       <div className="container flex h-14 items-center justify-between px-4">
         {/* Logo and Title */}
-        <div className="flex flex-col">
+        <Link href="/" className="flex flex-col hover:opacity-80">
           <span className="font-bold text-xl text-zinc-900 dark:text-zinc-50">Grid Wit</span>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">Unlock your mind. One word at a time.</span>
-        </div>
+        </Link>
 
         {/* Header Actions */}
         <div className="flex items-center gap-2">
@@ -62,32 +83,52 @@ export default function Header() {
                   <X className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
                 </button>
               </div>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Search by puzzle ID..."
-                  className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700"
-                />
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700"
-                />
-                <input
-                  type="text"
-                  placeholder="Search by word..."
-                  className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700"
-                />
-                <input
-                  type="text"
-                  placeholder="Search by clue..."
-                  className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700"
-                />
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="author" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Search by Author
+                  </label>
+                  <input
+                    id="author"
+                    name="author"
+                    type="text"
+                    placeholder="Enter author name..."
+                    className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700 rounded-md"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="date" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Search by Date
+                  </label>
+                  <input
+                    id="date"
+                    name="date"
+                    type="date"
+                    className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700 rounded-md"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="year" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Search by Year
+                  </label>
+                  <select
+                    id="year"
+                    name="year"
+                    className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700 rounded-md"
+                  >
+                    <option value="">Select year...</option>
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
                 <button
-                  className="w-full px-4 py-2 text-sm font-medium text-white bg-zinc-900 dark:bg-zinc-50 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+                  type="submit"
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-zinc-900 dark:bg-zinc-50 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors rounded-md"
                 >
                   Search
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -106,13 +147,23 @@ export default function Header() {
             <>
                   <Link 
                     href="/"
+                    onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Calendar className="h-4 w-4" />
                     Daily Puzzle
                   </Link>
                   <Link 
+                    href="/puzzles/random"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    New Puzzle
+                  </Link>
+                  <Link 
                     href="/in-progress"
+                    onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Clock className="h-4 w-4" />
@@ -120,6 +171,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/dashboard"
+                    onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <LayoutDashboard className="h-4 w-4" />
@@ -127,6 +179,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/bookmarks"
+                    onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <BookmarkIcon className="h-4 w-4" />
@@ -134,6 +187,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/favorites"
+                    onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Star className="h-4 w-4" />
@@ -141,7 +195,7 @@ export default function Header() {
                   </Link>
                   <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
                   <button
-                    onClick={signOut}
+                    onClick={handleSignOut}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <LogOut className="h-4 w-4" />
@@ -151,6 +205,7 @@ export default function Header() {
           ) : (
                 <Link 
                   href="/login"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   <LogIn className="h-4 w-4" />

@@ -5,28 +5,56 @@ import { cn } from "@/lib/utils"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
-export function UserAuthForm({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+interface UserAuthFormProps extends HTMLAttributes<HTMLDivElement> {
+  type: 'login' | 'register'
+}
+
+export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const supabase = createClientComponentClient()
+  const router = useRouter()
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
+      let error;
+      if (type === 'login') {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        error = signInError
+      } else {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+        error = signUpError
+      }
 
       if (error) {
-        toast.error('Authentication failed')
+        toast.error(error.message)
+      } else {
+        if (type === 'register') {
+          toast.success('Check your email to confirm your account')
+        } else {
+          toast.success('Successfully signed in!')
+          router.push('/')
+        }
       }
-    } catch (_err) {
+    } catch {
       toast.error('Something went wrong')
     } finally {
       setIsLoading(false)
@@ -47,7 +75,7 @@ export function UserAuthForm({ className, ...props }: HTMLAttributes<HTMLDivElem
       if (error) {
         toast.error('Authentication failed')
       }
-    } catch (_err) {
+    } catch {
       toast.error('Something went wrong')
     } finally {
       setIsLoading(false)
@@ -56,14 +84,37 @@ export function UserAuthForm({ className, ...props }: HTMLAttributes<HTMLDivElem
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
-      <Button onClick={onSubmit} disabled={isLoading}>
-        {isLoading ? (
-          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Icons.gitHub className="mr-2 h-4 w-4" />
-        )}
-        Sign in with GitHub
-      </Button>
+      <form onSubmit={onSubmit}>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+            {type === 'login' ? 'Sign In' : 'Sign Up'}
+          </Button>
+        </div>
+      </form>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />

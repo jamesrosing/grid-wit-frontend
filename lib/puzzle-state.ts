@@ -3,50 +3,48 @@ import { persist } from 'zustand/middleware'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
-interface PuzzleProgress {
-  [puzzleId: string]: {
-    grid: string[][]
-    startTime: string
-    lastSaveTime: string
-  }
-}
-
 interface PuzzleState {
-  progress: PuzzleProgress
-  saveProgress: (puzzleId: string, grid: string[][]) => void
-  getProgress: (puzzleId: string) => {
-    grid: string[][]
-    startTime: string
-    lastSaveTime: string
-  } | null
-  clearProgress: (puzzleId: string) => void
+  selectedCell: { row: number; col: number } | null
+  highlightedCells: { row: number; col: number }[]
+  revealedCells: { row: number; col: number }[]
+  direction: 'across' | 'down'
+  startTime: string | null
+  lastSaveTime: string | null
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  saveProgress: (grid: string[][]) => void
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  getProgress: () => null
+  clearProgress: () => void
 }
 
 export const usePuzzleStore = create<PuzzleState>()(
   persist(
-    (set, get) => ({
-      progress: {},
-      saveProgress: (puzzleId, grid) => {
+    (set) => ({
+      selectedCell: null,
+      highlightedCells: [],
+      revealedCells: [],
+      direction: 'across',
+      startTime: null,
+      lastSaveTime: null,
+      saveProgress: (_grid: string[][]) => {
         const now = new Date().toISOString()
-        set((state) => ({
-          progress: {
-            ...state.progress,
-            [puzzleId]: {
-              grid,
-              startTime: state.progress[puzzleId]?.startTime || now,
-              lastSaveTime: now,
-            },
-          },
+        set(() => ({
+          startTime: now,
+          lastSaveTime: now,
         }))
       },
-      getProgress: (puzzleId) => {
-        return get().progress[puzzleId] || null
+      getProgress: () => {
+        return null
       },
-      clearProgress: (puzzleId) => {
-        set((state) => {
-          const { [puzzleId]: _, ...rest } = state.progress
-          return { progress: rest }
-        })
+      clearProgress: () => {
+        set(() => ({
+          selectedCell: null,
+          highlightedCells: [],
+          revealedCells: [],
+          direction: 'across',
+          startTime: null,
+          lastSaveTime: null
+        }))
       },
     }),
     {

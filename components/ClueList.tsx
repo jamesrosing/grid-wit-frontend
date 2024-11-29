@@ -14,11 +14,11 @@ export function ClueList({ clues, activeClue, onClueSelect }: Props) {
   const [selectedDirection, setSelectedDirection] = useState<'across' | 'down'>('across')
 
   const acrossClues = clues
-    .filter(clue => clue.direction === 'across')
+    .filter((item) => item.direction === 'across')
     .sort((a, b) => a.number - b.number)
 
   const downClues = clues
-    .filter(clue => clue.direction === 'down')
+    .filter((item) => item.direction === 'down')
     .sort((a, b) => a.number - b.number)
 
   return (

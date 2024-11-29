@@ -2,7 +2,9 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -11,8 +13,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get in-progress puzzles with puzzle details
-    const { data: inProgress } = await supabase
+    // Get all puzzle progress with puzzle details
+    const { data: allProgress } = await supabase
       .from('puzzle_progress')
       .select(`
         *,
@@ -24,16 +26,11 @@ export async function GET() {
         )
       `)
       .eq('user_id', user.id)
-      .eq('completed', false)
       .order('last_played_at', { ascending: false })
-      .limit(5)
 
-    // Get completed puzzles count
-    const { count: totalSolved } = await supabase
-      .from('puzzle_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('completed', true)
+    // Separate completed and in-progress puzzles
+    const completedPuzzles = allProgress?.filter(p => p.completed) || []
+    const inProgressPuzzles = allProgress?.filter(p => !p.completed) || []
 
     // Get favorites count
     const { count: favorites } = await supabase
@@ -42,30 +39,26 @@ export async function GET() {
       .eq('user_id', user.id)
       .eq('is_favorite', true)
 
-    // Get recent activity with puzzle details
-    const { data: recentActivity } = await supabase
-      .from('puzzle_progress')
-      .select(`
-        *,
-        puzzle:puzzles!left (
-          id,
-          title,
-          author,
-          date
-        )
-      `)
-      .eq('user_id', user.id)
-      .order('last_played_at', { ascending: false })
-      .limit(10)
+    // Get recent activity (last 10 puzzles)
+    const recentActivity = allProgress?.slice(0, 10) || []
+
+    // Calculate completion rate
+    const totalAttempted = allProgress?.length || 0
+    const completionRate = totalAttempted > 0 
+      ? Math.round((completedPuzzles.length / totalAttempted) * 100) 
+      : 0
 
     return NextResponse.json({
       stats: {
-        totalSolved: totalSolved || 0,
-        inProgress: inProgress?.length || 0,
-        favorites: favorites || 0
+        totalAttempted,
+        totalSolved: completedPuzzles.length,
+        inProgress: inProgressPuzzles.length,
+        favorites: favorites || 0,
+        completionRate
       },
-      recentActivity: recentActivity || [],
-      inProgressPuzzles: inProgress || []
+      recentActivity,
+      completedPuzzles,
+      inProgressPuzzles
     })
   } catch (err) {
     console.error('Error fetching dashboard data:', err)

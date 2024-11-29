@@ -8,6 +8,7 @@ import type { Database } from '@/lib/database.types'
 import { Clock } from 'lucide-react'
 
 interface PuzzleProgress {
+  id: number
   puzzle_id: string
   state: string
   last_played_at: string
@@ -30,29 +31,43 @@ export default function InProgressPage() {
       if (!user) return
 
       try {
-        const { data, error } = await supabase
+        // First get puzzle progress
+        const { data: progressData, error: progressError } = await supabase
           .from('puzzle_progress')
-          .select(`
-            puzzle_id,
-            state,
-            last_played_at,
-            puzzle:puzzles (
-              id,
-              title,
-              author,
-              date
-            )
-          `)
+          .select('id, puzzle_id, state, last_played_at')
           .eq('user_id', user.id)
           .eq('completed', false)
           .order('last_played_at', { ascending: false })
 
-        if (error) {
-          console.error('Error loading in-progress puzzles:', error)
+        if (progressError) {
+          console.error('Error loading progress:', progressError)
           return
         }
 
-        setPuzzles(data || [])
+        // Then get puzzle details for each puzzle in progress
+        const puzzlePromises = progressData?.map(async (progress) => {
+          const { data: puzzleData, error: puzzleError } = await supabase
+            .from('puzzles')
+            .select('id, title, author, date')
+            .eq('id', progress.puzzle_id)
+            .single()
+
+          if (puzzleError) {
+            console.error('Error loading puzzle:', puzzleError)
+            return null
+          }
+
+          return {
+            ...progress,
+            puzzle: puzzleData
+          }
+        }) || []
+
+        const puzzlesWithDetails = (await Promise.all(puzzlePromises)).filter(
+          (puzzle): puzzle is PuzzleProgress => puzzle !== null
+        )
+
+        setPuzzles(puzzlesWithDetails)
       } catch (e) {
         console.error('Error in loadInProgressPuzzles:', e)
       } finally {
@@ -90,13 +105,15 @@ export default function InProgressPage() {
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {puzzles.map((puzzle) => (
             <Link
-              key={puzzle.puzzle_id}
-              href={`/`}
+              key={puzzle.id}
+              href={`/puzzles/${puzzle.puzzle_id}`}
               className="block p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900"
             >
-              <div className="font-medium">{puzzle.puzzle.title}</div>
+              <div className="font-medium">
+                {puzzle.puzzle?.title || `Puzzle #${puzzle.puzzle_id}`}
+              </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                by {puzzle.puzzle.author}
+                by {puzzle.puzzle?.author || 'Unknown Author'}
               </div>
               <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                 <Clock className="h-4 w-4" />

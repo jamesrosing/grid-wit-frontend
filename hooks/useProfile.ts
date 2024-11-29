@@ -6,7 +6,7 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export function useProfile(userId?: string) {
-  const { supabase } = useSupabase()
+  const supabase = useSupabase()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

@@ -10,6 +10,7 @@ type AuthContextType = {
   user: User | null
   supabase: SupabaseClient
   loading: boolean
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,6 +20,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const supabase = createClientComponentClient()
   const router = useRouter()
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Error signing out:', error.message)
+      throw error
+    }
+  }
 
   useEffect(() => {
     let mounted = true
@@ -73,7 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     supabase,
-    loading
+    loading,
+    signOut
   }
 
   return (

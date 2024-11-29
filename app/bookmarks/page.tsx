@@ -57,7 +57,7 @@ export default function BookmarksPage() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {bookmarks.map((bookmark) => (
           <Link
-            key={bookmark.id}
+            key={bookmark.puzzle_id}
             href={`/`}
             className="block p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900"
           >

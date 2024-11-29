@@ -1,18 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useSupabase } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { User } from '@supabase/supabase-js'
 
 export default function ProfilePage() {
-  const { user } = useSupabase()
+  const supabase = useSupabase()
   const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    async function getUser() {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user || null)
+    }
+    getUser()
+  }, [supabase.auth])
+
   const { profile, loading, updateProfile } = useProfile(user?.id)
   const [formData, setFormData] = useState({
     username: '',
-    display_name: '',
-    bio: ''
+    email: '',
   })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -24,8 +35,7 @@ export default function ProfilePage() {
     if (profile) {
       setFormData({
         username: profile.username || '',
-        display_name: profile.display_name || '',
-        bio: profile.bio || ''
+        email: user?.email || '',
       })
     }
   }, [profile, user, router])
@@ -85,27 +95,14 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
-                Display Name
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
               </label>
               <input
-                type="text"
-                id="display_name"
-                value={formData.display_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                rows={4}
-                value={formData.bio}
-                onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                type="email"
+                id="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               />
             </div>

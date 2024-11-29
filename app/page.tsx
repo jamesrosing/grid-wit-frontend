@@ -22,7 +22,7 @@ export default function CrosswordPage() {
   const supabase = createClientComponentClient<Database>()
 
   // Memoize saveProgress to prevent infinite useEffect loops
-  const saveProgress = useCallback(async (showToast = false) => {
+  const saveProgress = useCallback(async (showToast = false, isComplete = false) => {
     if (!user?.id || !puzzle?.id) {
       if (showToast) toast.error('Please sign in to save your progress')
       return
@@ -35,8 +35,13 @@ export default function CrosswordPage() {
           user_id: user.id,
           puzzle_id: puzzle.id.toString(),
           state: JSON.stringify(userProgress),
-          completed: false,
-          last_played_at: new Date().toISOString()
+          completed: isComplete,
+          last_played_at: new Date().toISOString(),
+          puzzle_data: {
+            title: puzzle.title,
+            author: puzzle.author,
+            date: puzzle.date
+          }
         })
 
       if (error) {
@@ -45,14 +50,24 @@ export default function CrosswordPage() {
         return false
       }
       
-      if (showToast) toast.success('Progress saved successfully')
+      if (showToast) {
+        if (isComplete) {
+          toast.success('Congratulations! Puzzle completed!')
+        } else {
+          toast.success('Progress saved successfully')
+        }
+      }
       return true
     } catch (e) {
       console.error('Error in saveProgress:', e)
       if (showToast) toast.error('Failed to save progress')
       return false
     }
-  }, [user?.id, puzzle?.id, userProgress, supabase])
+  }, [user?.id, puzzle?.id, puzzle?.title, puzzle?.author, puzzle?.date, userProgress, supabase])
+
+  const handlePuzzleComplete = useCallback(() => {
+    saveProgress(true, true)
+  }, [saveProgress])
 
   useEffect(() => {
     async function loadPuzzle() {
@@ -178,6 +193,7 @@ export default function CrosswordPage() {
               newProgress[row][col] = value
               setUserProgress(newProgress)
             }}
+            onPuzzleComplete={handlePuzzleComplete}
           />
           <div className="mt-4">
             <PuzzleInfo 

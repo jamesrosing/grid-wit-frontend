@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, KeyboardEvent, ChangeEvent } from 'react'
+import { useState, useEffect, KeyboardEvent } from 'react'
 import { Puzzle, Cell, ActiveCell, GRID_SIZE } from '@/types'
 import { cn } from '@/lib/utils'
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 interface Props {
   puzzle: Puzzle
   onCellSelect: (row: number, col: number, direction: 'across' | 'down') => void
@@ -17,7 +18,9 @@ interface Props {
   } | null
   userProgress: string[][]
   onUpdateProgress: (row: number, col: number, value: string) => void
+  onPuzzleComplete?: () => void
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 interface Movement {
   rowDelta: number
@@ -30,7 +33,8 @@ export function CrosswordGrid({
   activeCell,
   activeClue,
   userProgress,
-  onUpdateProgress 
+  onUpdateProgress,
+  onPuzzleComplete 
 }: Props) {
   const [grid, setGrid] = useState<Cell[][]>([])
   const [direction, setDirection] = useState<'across' | 'down'>('across')
@@ -49,16 +53,6 @@ export function CrosswordGrid({
            (row === 0 || grid[index - GRID_SIZE] === '.') &&
            row < GRID_SIZE - 1 && 
            grid[index + GRID_SIZE] !== '.'
-  }
-
-  function getAvailableDirections(number: number): { across: boolean; down: boolean } {
-    const acrossClue = puzzle.clues.find(c => c.number === number && c.direction === 'across')
-    const downClue = puzzle.clues.find(c => c.number === number && c.direction === 'down')
-
-    return {
-      across: !!acrossClue,
-      down: !!downClue
-    }
   }
 
   const handleCellClick = (row: number, col: number, cell: Cell) => {
@@ -152,6 +146,23 @@ export function CrosswordGrid({
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, row: number, col: number) => {
     // Always prevent default behavior to ensure consistent handling
     e.preventDefault()
+
+    // Special key combo for revealing answers (Ctrl+Alt+R)
+    if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'r') {
+      if (activeClue) {
+        const answer = activeClue.answer.split('')
+        if (activeClue.direction === 'across') {
+          for (let i = 0; i < answer.length; i++) {
+            onUpdateProgress(activeClue.row, activeClue.column + i, answer[i])
+          }
+        } else {
+          for (let i = 0; i < answer.length; i++) {
+            onUpdateProgress(activeClue.row + i, activeClue.column, answer[i])
+          }
+        }
+      }
+      return
+    }
 
     // Handle special keys
     switch (e.key) {
@@ -372,6 +383,22 @@ export function CrosswordGrid({
     }
     return null
   }
+
+  // Check if puzzle is completed after each update
+  useEffect(() => {
+    if (!grid.length || !userProgress.length) return
+
+    const isComplete = grid.every((row, i) => 
+      row.every((cell, j) => 
+        cell.isBlack || 
+        (userProgress[i][j].toLowerCase() === cell.value.toLowerCase())
+      )
+    )
+
+    if (isComplete && onPuzzleComplete) {
+      onPuzzleComplete()
+    }
+  }, [grid, userProgress, onPuzzleComplete])
 
   return (
     <div className="flex flex-col gap-4">
