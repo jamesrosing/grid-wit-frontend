@@ -1,31 +1,31 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Clock } from 'lucide-react'
+import { Grid } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { PuzzleList } from '@/components/dashboard/PuzzleList'
 
-export default function HistoryPage() {
+export default function PuzzlesPage() {
   const [puzzles, setPuzzles] = useState([])
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
   useEffect(() => {
-    async function loadHistory() {
+    async function loadPuzzles() {
       try {
         setLoading(true)
-        const response = await fetch('/api/puzzles/history')
+        const response = await fetch('/api/puzzles')
         const data = await response.json()
         setPuzzles(data)
       } catch (err) {
-        console.error('Error loading history:', err)
+        console.error('Error loading puzzles:', err)
       } finally {
         setLoading(false)
       }
     }
 
     if (user) {
-      loadHistory()
+      loadPuzzles()
     }
   }, [user])
 
@@ -36,11 +36,11 @@ export default function HistoryPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <PuzzleList
-        title="Puzzle History"
-        description="Your previously played puzzles"
-        icon={Clock}
+        title="Available Puzzles"
+        description="Browse our collection of crossword puzzles"
+        icon={Grid}
         puzzles={puzzles}
       />
     </div>
   )
-}
+} 

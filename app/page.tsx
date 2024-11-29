@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getDailyPuzzle } from '@/lib/api'
 import { CrosswordGrid } from '@/components/CrosswordGrid'
 import { ClueList } from '@/components/ClueList'
@@ -20,6 +20,39 @@ export default function CrosswordPage() {
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
   const supabase = createClientComponentClient<Database>()
+
+  // Memoize saveProgress to prevent infinite useEffect loops
+  const saveProgress = useCallback(async (showToast = false) => {
+    if (!user?.id || !puzzle?.id) {
+      if (showToast) toast.error('Please sign in to save your progress')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('puzzle_progress')
+        .upsert({
+          user_id: user.id,
+          puzzle_id: puzzle.id.toString(),
+          state: JSON.stringify(userProgress),
+          completed: false,
+          last_played_at: new Date().toISOString()
+        })
+
+      if (error) {
+        console.error('Error saving progress:', error)
+        if (showToast) toast.error('Failed to save progress')
+        return false
+      }
+      
+      if (showToast) toast.success('Progress saved successfully')
+      return true
+    } catch (e) {
+      console.error('Error in saveProgress:', e)
+      if (showToast) toast.error('Failed to save progress')
+      return false
+    }
+  }, [user?.id, puzzle?.id, userProgress, supabase])
 
   useEffect(() => {
     async function loadPuzzle() {
@@ -86,45 +119,16 @@ export default function CrosswordPage() {
     loadPuzzle()
   }, [user?.id, supabase])
 
-  const saveProgress = async (showToast = false) => {
-    if (!user?.id || !puzzle?.id) {
-      if (showToast) toast.error('Please sign in to save your progress')
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('puzzle_progress')
-        .upsert({
-          user_id: user.id,
-          puzzle_id: puzzle.id.toString(),
-          state: JSON.stringify(userProgress),
-          completed: false,
-          last_played_at: new Date().toISOString()
-        })
-
-      if (error) {
-        console.error('Error saving progress:', error)
-        if (showToast) toast.error('Failed to save progress')
-        return false
-      }
-      
-      if (showToast) toast.success('Progress saved successfully')
-      return true
-    } catch (e) {
-      console.error('Error in saveProgress:', e)
-      if (showToast) toast.error('Failed to save progress')
-      return false
-    }
-  }
-
   // Auto-save effect
   useEffect(() => {
     if (!user?.id || !puzzle?.id) return
+    
+    const timer = setInterval(() => {
+      saveProgress()
+    }, 30000) // Save every 30 seconds
 
-    const timeoutId = setTimeout(() => saveProgress(false), 1000)
-    return () => clearTimeout(timeoutId)
-  }, [userProgress])
+    return () => clearInterval(timer)
+  }, [user?.id, puzzle?.id, saveProgress])
 
   const handleSaveProgress = () => saveProgress(true)
 

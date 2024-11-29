@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 export default function ProfilePage() {
   const { user } = useSupabase()
   const router = useRouter()
-  const { profile, loading, error, updateProfile } = useProfile(user?.id)
+  const { profile, loading, updateProfile } = useProfile(user?.id)
   const [formData, setFormData] = useState({
     username: '',
     display_name: '',

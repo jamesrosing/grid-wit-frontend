@@ -4,21 +4,14 @@ import { Menu, X, Sun, Moon, Calendar, Laptop, Search, BookmarkIcon, Clock, Star
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
-import { searchPuzzles } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import Image from 'next/image'
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
-  const { user } = useAuth()
+  const [isOpen, setIsOpen] = useState(false)
+  const { setTheme } = useTheme()
+  const { user, signOut } = useAuth()
   const supabase = createClientComponentClient()
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-zinc-950 dark:border-zinc-800">
@@ -34,7 +27,7 @@ export default function Header() {
           {user && (
             <button
               className="p-2"
-              onClick={() => setIsSearchOpen(true)}
+              onClick={() => setIsOpen(true)}
               aria-label="Search"
             >
               <Search className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
@@ -42,7 +35,7 @@ export default function Header() {
           )}
           <button
             className="p-2"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => setIsOpen(!isOpen)}
             aria-label="Menu"
           >
             <Menu className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
@@ -51,18 +44,18 @@ export default function Header() {
       </div>
 
       {/* Search Modal */}
-      {isSearchOpen && (
+      {isOpen && (
         <div>
           <div 
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-            onClick={() => setIsSearchOpen(false)}
+            onClick={() => setIsOpen(false)}
           />
           <div className="fixed right-4 top-20 w-[350px] bg-white dark:bg-zinc-950 z-50 animate-in slide-in-from-top">
             <div className="flex flex-col p-4 gap-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Search Puzzles</h2>
                 <button 
-                  onClick={() => setIsSearchOpen(false)}
+                  onClick={() => setIsOpen(false)}
                   className="p-2"
                   aria-label="Close search"
                 >
@@ -101,11 +94,11 @@ export default function Header() {
       )}
 
       {/* Menu Modal */}
-      {isMenuOpen && (
+      {isOpen && (
         <div>
           <div 
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={() => setIsOpen(false)}
           />
           <div className="fixed right-4 top-20 w-[200px] bg-white dark:bg-zinc-950 z-50 animate-in slide-in-from-top">
             <div className="flex flex-col p-2">
@@ -148,7 +141,7 @@ export default function Header() {
                   </Link>
                   <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
                   <button
-                    onClick={handleSignOut}
+                    onClick={signOut}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <LogOut className="h-4 w-4" />

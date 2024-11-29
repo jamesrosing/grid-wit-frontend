@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import type { Database } from '@/lib/database.types'
 
-interface Bookmark {
-  id: string
-  puzzle_id: string
-  created_at: string
-}
+type PuzzleFavorite = Database['public']['Tables']['puzzle_favorites']['Row']
 
 export function useBookmarks() {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [bookmarks, setBookmarks] = useState<PuzzleFavorite[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()

@@ -5,7 +5,7 @@ import { UserAuthForm } from '@/components/user-auth-form'
 import { Icons } from '@/components/icons'
 
 export default function AuthenticationPage() {
-  const [error, setError] = useState<string | null>(null)
+  const [error] = useState<string | null>(null)
 
   return (
     <div className='flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center'>

@@ -2,22 +2,17 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-// GET /api/bookmarks - Get user's bookmarked puzzles
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-
-    // Get the current user's ID
+    
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: bookmarks } = await supabase
-      .from('puzzle_bookmarks')
+      .from('puzzle_favorites')
       .select(`
         *,
         puzzle:puzzles (
@@ -31,81 +26,62 @@ export async function GET() {
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-
+    
     return NextResponse.json(bookmarks)
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error fetching bookmarks' },
-      { status: 500 }
-    )
+  } catch (err) {
+    console.error('Error fetching bookmarks:', err)
+    return NextResponse.json({ error: 'Failed to fetch bookmarks' }, { status: 500 })
   }
 }
 
-// POST /api/bookmarks - Add a bookmark
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     const { puzzle_id } = await request.json()
-
-    // Get the current user's ID
+    
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data, error } = await supabase
-      .from('puzzle_bookmarks')
+    const { data: bookmark } = await supabase
+      .from('puzzle_favorites')
       .insert({ 
         puzzle_id,
-        user_id: user.id 
+        user_id: user.id,
+        is_favorite: true,
+        created_at: new Date().toISOString()
       })
-      .select()
       .single()
-
-    if (error) throw error
-
-    return NextResponse.json(data)
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error creating bookmark' },
-      { status: 500 }
-    )
+    
+    return NextResponse.json(bookmark)
+  } catch (err) {
+    console.error('Error creating bookmark:', err)
+    return NextResponse.json({ error: 'Failed to create bookmark' }, { status: 500 })
   }
 }
 
-// DELETE /api/bookmarks - Remove a bookmark
 export async function DELETE(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     const { puzzle_id } = await request.json()
-
-    // Get the current user's ID
+    
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { error } = await supabase
-      .from('puzzle_bookmarks')
+    await supabase
+      .from('puzzle_favorites')
       .delete()
       .match({ 
         puzzle_id,
         user_id: user.id 
       })
-
-    if (error) throw error
-
+    
     return NextResponse.json({ success: true })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error deleting bookmark' },
-      { status: 500 }
-    )
+  } catch (err) {
+    console.error('Error deleting bookmark:', err)
+    return NextResponse.json({ error: 'Failed to delete bookmark' }, { status: 500 })
   }
 }
