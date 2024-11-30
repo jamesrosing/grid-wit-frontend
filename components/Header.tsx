@@ -8,7 +8,8 @@ import { useTheme } from 'next-themes'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { setTheme } = useTheme()
   const { user, signOut } = useAuth()
   const router = useRouter()
@@ -25,7 +26,7 @@ export default function Header() {
     if (date) params.append('date', date.toString())
     if (year) params.append('year', year.toString())
 
-    setIsOpen(false)
+    setIsSearchOpen(false)
     router.push(`/puzzles/search?${params.toString()}`)
   }
 
@@ -33,6 +34,13 @@ export default function Header() {
     await signOut()
     router.push('/')
   }
+
+  const startYear = 1976
+  const currentYear = new Date().getFullYear()
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, i) => currentYear - i
+  )
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-zinc-950 dark:border-zinc-800">
@@ -48,7 +56,7 @@ export default function Header() {
           {user && (
             <button
               className="p-2"
-              onClick={() => setIsOpen(true)}
+              onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
             >
               <Search className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
@@ -56,7 +64,7 @@ export default function Header() {
           )}
           <button
             className="p-2"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => setIsMenuOpen(true)}
             aria-label="Menu"
           >
             <Menu className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
@@ -65,18 +73,18 @@ export default function Header() {
       </div>
 
       {/* Search Modal */}
-      {isOpen && (
+      {isSearchOpen && (
         <div>
           <div 
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setIsSearchOpen(false)}
           />
           <div className="fixed right-4 top-20 w-[350px] bg-white dark:bg-zinc-950 z-50 animate-in slide-in-from-top">
             <div className="flex flex-col p-4 gap-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Search Puzzles</h2>
                 <button 
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setIsSearchOpen(false)}
                   className="p-2"
                   aria-label="Close search"
                 >
@@ -117,7 +125,7 @@ export default function Header() {
                     className="w-full px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700 rounded-md"
                   >
                     <option value="">Select year...</option>
-                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                    {years.map(year => (
                       <option key={year} value={year}>{year}</option>
                     ))}
                   </select>
@@ -135,11 +143,11 @@ export default function Header() {
       )}
 
       {/* Menu Modal */}
-      {isOpen && (
+      {isMenuOpen && (
         <div>
           <div 
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setIsMenuOpen(false)}
           />
           <div className="fixed right-4 top-20 w-[200px] bg-white dark:bg-zinc-950 z-50 animate-in slide-in-from-top">
             <div className="flex flex-col p-2">
@@ -147,7 +155,7 @@ export default function Header() {
             <>
                   <Link 
                     href="/"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Calendar className="h-4 w-4" />
@@ -155,7 +163,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/puzzles/random"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Calendar className="h-4 w-4" />
@@ -163,7 +171,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/in-progress"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Clock className="h-4 w-4" />
@@ -171,7 +179,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/dashboard"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <LayoutDashboard className="h-4 w-4" />
@@ -179,7 +187,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/bookmarks"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <BookmarkIcon className="h-4 w-4" />
@@ -187,7 +195,7 @@ export default function Header() {
                   </Link>
                   <Link 
                     href="/favorites"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     <Star className="h-4 w-4" />
@@ -205,7 +213,7 @@ export default function Header() {
           ) : (
                 <Link 
                   href="/login"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   <LogIn className="h-4 w-4" />

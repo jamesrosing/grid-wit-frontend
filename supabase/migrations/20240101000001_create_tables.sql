@@ -2,7 +2,7 @@
 create table if not exists public.puzzle_progress (
     id uuid default gen_random_uuid() primary key,
     user_id uuid references auth.users(id) on delete cascade not null,
-    puzzle_id text not null,
+    puzzle_id uuid not null,
     progress jsonb not null default '[]',
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
@@ -32,7 +32,7 @@ create policy "Users can update their own puzzle progress"
 create table if not exists public.puzzle_bookmarks (
     id uuid default gen_random_uuid() primary key,
     user_id uuid references auth.users(id) on delete cascade not null,
-    puzzle_id text not null,
+    puzzle_id uuid not null,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     unique (user_id, puzzle_id)
 );

@@ -10,4 +10,4 @@ SET puzzle_data = jsonb_build_object(
   'date', p.date
 )
 FROM public.puzzles p
-WHERE pp.puzzle_id = p.id::text; 
+WHERE pp.puzzle_id = p.id;

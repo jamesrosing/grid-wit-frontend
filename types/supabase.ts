@@ -9,6 +9,47 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      puzzles: {
+        Row: {
+          id: string
+          title: string | null
+          grid: Json
+          clues: Json
+          author: string
+          editor: string | null
+          date: string
+          difficulty: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title?: string | null
+          grid: Json
+          clues: Json
+          author: string
+          editor?: string | null
+          date: string
+          difficulty?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string | null
+          grid?: Json
+          clues?: Json
+          author?: string
+          editor?: string | null
+          date?: string
+          difficulty?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       puzzle_progress: {
         Row: {
           id: string
