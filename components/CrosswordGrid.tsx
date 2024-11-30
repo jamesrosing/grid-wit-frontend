@@ -411,9 +411,10 @@ export function CrosswordGrid({
       )}
       <div className="w-full max-w-[min(90vw,600px)] aspect-square">
         <div 
-          className="grid gap-px bg-zinc-200 border border-zinc-300 h-full" 
+          className="grid h-full bg-zinc-200 border border-zinc-300" 
           style={{ 
-            gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+            gap: '1px',
           }}
         >
           {grid.map((row, i) =>
@@ -422,11 +423,11 @@ export function CrosswordGrid({
                 key={`${i}-${j}`}
                 className={cn(
                   "relative flex items-center justify-center",
-                  cell.isBlack ? "bg-black" : "bg-white",
+                  cell.isBlack ? "bg-black dark:bg-black" : "bg-white dark:bg-white",
                   activeCell?.row === i && activeCell?.col === j && "bg-green-100/70 dark:bg-green-900/30",
                   isPartOfActiveClue(i, j) && "bg-green-100/50 dark:bg-green-900/20",
                   !cell.isBlack && "hover:bg-green-100/30 dark:hover:bg-green-900/10",
-                  "aspect-square text-center cursor-pointer select-none"
+                  "w-full h-full text-center cursor-pointer select-none"
                 )}
                 onClick={() => handleCellClick(i, j, cell)}
                 onDoubleClick={() => undefined}
@@ -439,13 +440,32 @@ export function CrosswordGrid({
                 {!cell.isBlack && (
                   <input
                     type="text"
-                    inputMode="none"
+                    pattern="[A-Za-z]*"
+                    inputMode="text"
                     maxLength={1}
                     value={userProgress[i][j] || ''}
-                    onChange={handleCellInput}
+                    onChange={(e) => {
+                      const value = e.target.value.slice(-1).toUpperCase()
+                      if (/^[A-Z]$/.test(value)) {
+                        onUpdateProgress(i, j, value)
+                        if (activeClue) {
+                          const movement = activeClue.direction === 'across' 
+                            ? { rowDelta: 0, colDelta: 1 } 
+                            : { rowDelta: 1, colDelta: 0 }
+                          moveToNextCell(i, j, movement.rowDelta, movement.colDelta)
+                        }
+                      }
+                    }}
                     onKeyDown={(e) => handleKeyDown(e, i, j)}
-                    className="w-full h-full text-center text-base md:text-xl font-bold text-black bg-transparent focus:outline-none select-none tracking-wider"
-                    style={{ caretColor: 'transparent', fontFamily: "'Varela Round', system-ui" }}
+                    className={cn(
+                      "w-full h-full text-center text-base md:text-xl font-bold text-black",
+                      "bg-transparent focus:outline-none select-none tracking-wider",
+                      "appearance-none"
+                    )}
+                    style={{ 
+                      caretColor: 'transparent',
+                      fontFamily: "'Varela Round', system-ui"
+                    }}
                     ref={activeCell?.row === i && activeCell?.col === j ? (el) => el?.focus() : null}
                     aria-label={`Row ${i + 1}, Column ${j + 1}`}
                   />

@@ -116,21 +116,38 @@ export function PuzzleInfo({ puzzle, onSave }: PuzzleInfoProps) {
   }
 
   return (
-    <div className="flex items-center justify-between py-2 border-t border-b" role="complementary" aria-label="Puzzle information">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-xs font-medium">#{puzzle.id}</span>
+    <div 
+      className="flex items-center justify-between py-2 px-2 md:px-4 border-t border-b text-xs md:text-sm" 
+      role="complementary" 
+      aria-label="Puzzle information"
+    >
+      <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
+        <span className="text-[10px] md:text-xs font-medium">#{puzzle.id}</span>
         <span aria-hidden="true">•</span>
-        <time dateTime={puzzle.date_published} className="text-xs">
+        <time 
+          dateTime={puzzle.date_published} 
+          className="text-[10px] md:text-xs hidden sm:inline"
+        >
           {new Date(puzzle.date_published).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric'
           })}
         </time>
+        <time 
+          dateTime={puzzle.date_published} 
+          className="text-[10px] md:text-xs sm:hidden"
+        >
+          {new Date(puzzle.date_published).toLocaleDateString('en-US', {
+            month: 'numeric',
+            day: 'numeric',
+            year: '2-digit'
+          })}
+        </time>
         <span aria-hidden="true">•</span>
-        <span className="text-xs">by {puzzle.author}</span>
+        <span className="text-[10px] md:text-xs">by {puzzle.author}</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 md:gap-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -139,21 +156,21 @@ export function PuzzleInfo({ puzzle, onSave }: PuzzleInfoProps) {
                 size="sm"
                 onClick={handleBookmark}
                 disabled={loading}
-                className="text-muted-foreground hover:text-foreground"
+                className="h-8 md:h-9 px-2 md:px-3 text-muted-foreground hover:text-foreground"
                 aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
               >
                 {loading ? (
-                  <Icons.spinner className="h-4 w-4 animate-spin" />
+                  <Icons.spinner className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
                 ) : isBookmarked ? (
-                  <Icons.bookmarkCheck className="h-4 w-4" />
+                  <Icons.bookmarkCheck className="h-3 w-3 md:h-4 md:w-4" />
                 ) : (
-                  <Icons.bookmark className="h-4 w-4" />
+                  <Icons.bookmark className="h-3 w-3 md:h-4 md:w-4" />
                 )}
-                <span className="ml-2 text-xs">Bookmark</span>
+                <span className="ml-1 md:ml-2 text-[10px] md:text-xs hidden sm:inline">Bookmark</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}</p>
+              <p className="text-xs">{isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -166,19 +183,19 @@ export function PuzzleInfo({ puzzle, onSave }: PuzzleInfoProps) {
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving || !onSave}
-                className="text-muted-foreground hover:text-foreground"
+                className="h-8 md:h-9 px-2 md:px-3 text-muted-foreground hover:text-foreground"
                 aria-label="Save progress"
               >
                 {isSaving ? (
-                  <Icons.spinner className="h-4 w-4 animate-spin" />
+                  <Icons.spinner className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
                 ) : (
-                  <Icons.save className="h-4 w-4" />
+                  <Icons.save className="h-3 w-3 md:h-4 md:w-4" />
                 )}
-                <span className="ml-2 text-xs">Save Progress</span>
+                <span className="ml-1 md:ml-2 text-[10px] md:text-xs hidden sm:inline">Save Progress</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Save your current progress</p>
+              <p className="text-xs">Save your current progress</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
